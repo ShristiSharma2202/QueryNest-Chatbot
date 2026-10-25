@@ -1,0 +1,926 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self' https:; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https:; font-src 'self' https: data:; img-src 'self' https: data:;">
+    <title>QueryNest - Admin Dashboard</title>
+    <link rel="stylesheet" href="admin-styles.css">
+    <link rel="stylesheet" href="additional-styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+
+<body>
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-screen">
+        <div class="login-container">
+            <div class="login-header">
+                <div class="admin-logo">
+                    <i class="fas fa-robot"></i>
+                    <h1>QueryNest Admin</h1>
+                </div>
+                <p>Chatbot Management Dashboard</p>
+            </div>
+
+            <form id="loginForm" class="login-form">
+                <div class="form-group">
+                    <label for="email">Email/Username</label>
+                    <input type="text" id="email" name="email" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <div class="password-input-wrapper">
+                        <input type="password" id="password" name="password" required>
+                        <button type="button" class="password-toggle" data-target="password">
+                            <i class="fas fa-eye" id="password-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-group checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="keepLoggedIn" name="keepLoggedIn">
+                        Keep me logged in
+                    </label>
+                </div>
+
+                <button type="submit" class="btn-login" id="loginBtn">
+                    <span class="btn-text">Sign In</span>
+                    <span class="btn-loading"><i class="fas fa-spinner fa-spin"></i></span>
+                </button>
+
+                <div id="loginError" class="error-message"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Dashboard -->
+    <div id="dashboard" class="dashboard" style="display: none;">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="admin-logo">
+
+                    <img src="logoo.png" alt="QueryNest Logo" class="logo-image" id="logoImage">
+
+
+                    <div class="logo-fallback" id="logoFallback" style="display: none;">
+                        <i class="fas fa-robot" style="color: var(--primary-color); font-size: 1.5rem;"></i>
+                        <span>QueryNest</span>
+                    </div>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" data-section="dashboard" data-permission="canViewDashboard">
+                    <i class="fas fa-tachometer-alt"></i>
+                    <span style="opacity:1;width:auto;overflow:visible;">Dashboard</span>
+                </a>
+                <a href="#" class="nav-item" data-section="chats" data-permission="canViewChats">
+                    <i class="fas fa-comments"></i>
+                    <span style="opacity:1;width:auto;overflow:visible;">Chats</span>
+                </a>
+                <a href="#" class="nav-item" data-section="tickets" data-permission="canViewTickets">
+                    <i class="fas fa-ticket-alt"></i>
+                    <span style="opacity:1;width:auto;overflow:visible;">Tickets</span>
+                </a>
+                <a href="#" class="nav-item" data-section="faqs" data-permission="canViewFAQs">
+                    <i class="fas fa-question-circle"></i>
+                    <span style="opacity:1;width:auto;overflow:visible;">FAQs</span>
+                </a>
+                <a href="#" class="nav-item" data-section="account" data-permission="canViewDashboard">
+                    <i class="fas fa-user"></i>
+                    <span style="opacity:1;width:auto;overflow:visible;">Account</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="admin-info">
+                    <div class="admin-avatar">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="admin-details">
+                        <div class="admin-name" id="adminName">Admin User</div>
+                        <div class="admin-role" id="adminRole">Administrator</div>
+                    </div>
+                </div>
+                <button class="logout-btn" id="logoutBtn">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span style="opacity:1;width:auto;overflow:visible;"></span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <header class="main-header">
+                <div class="header-title">
+                    <h1 id="pageTitle">Dashboard</h1>
+                    <p id="pageSubtitle">Overview of your chatbot performance</p>
+                </div>
+                <div class="header-actions">
+                    <button class="btn-refresh" id="refreshBtn">
+                        <i class="fas fa-sync-alt"></i>
+                        Refresh
+                    </button>
+                </div>
+            </header>
+
+            <!-- Dashboard Section -->
+            <div id="dashboardSection" class="content-section active">
+                <!-- Personalized Welcome Message (Dashboard only) -->
+                <!-- Personalized Welcome Message (Dashboard only) -->
+                <div id="welcomeGreeting" class="welcome-greeting">
+                    <div class="welcome-left">
+                        <span class="welcome-emoji">👋</span>
+                        <div>
+                            <div id="welcomeMessage" class="welcome-message"></div>
+                            <div class="welcome-subtext">Here’s what’s happening with your chatbot today</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card" id="cardUsers">
+                        <div class="stat-icon">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="totalUsers">-</div>
+                            <div class="stat-label">Total Users</div>
+                            <div class="stat-subvalue" id="activeUsers">-</div>
+                            <div class="stat-sublabel">Active (24h)</div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card" id="cardChats">
+                        <div class="stat-icon">
+                            <i class="fas fa-comments"></i>
+                        </div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="totalChats">-</div>
+                            <div class="stat-label">Total Chats</div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card" id="cardTickets">
+                        <div class="stat-icon">
+                            <i class="fas fa-ticket-alt"></i>
+                        </div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="totalTickets">-</div>
+                            <div class="stat-label">Total Tickets</div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card" id="cardFAQs">
+                        <div class="stat-icon">
+                            <i class="fas fa-question-circle"></i>
+                        </div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="totalFAQs">-</div>
+                            <div class="stat-label">Active FAQs</div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card" id="cardSatisfaction">
+                        <div class="stat-icon">
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <div class="stat-info">
+                            <div class="stat-value" id="averageSatisfaction">-</div>
+                            <div class="stat-label">Avg Chat Rating</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-widgets">
+                    <div class="widget">
+                        <div class="widget-header">
+                            <h3>User Analytics</h3>
+                        </div>
+                        <div class="widget-content"
+                            style="display: flex; flex-direction: column; gap: 1.5rem; justify-content: flex-start;">
+                            <div id="userAnalytics" class="user-analytics">
+                                <div class="loading">Loading...</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="widget">
+                        <div class="widget-header">
+                            <h3>Top FAQs</h3>
+                        </div>
+                        <div class="widget-content">
+                            <div id="topFAQs" class="faq-list">
+                                <div class="loading">Loading...</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="widget">
+                        <div class="widget-header">
+                            <h3>Recent Ratings</h3>
+                        </div>
+                        <div class="widget-content">
+                            <div id="recentRatings" class="ratings-list">
+                                <div class="loading">Loading...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chats Section -->
+            <div id="chatsSection" class="content-section">
+                <div class="section-header">
+                    <div class="section-filters">
+                        <select id="chatStatusFilter">
+                            <option value="">All Statuses</option>
+                            <option value="active">Active</option>
+                            <option value="ended">Ended</option>
+                            <option value="archived">Archived</option>
+                        </select>
+                        <select id="chatTicketFilter">
+                            <option value="">All Tickets</option>
+                            <option value="converted">Converted to Ticket</option>
+                            <option value="not_converted">Not Converted</option>
+                        </select>
+                        <select id="chatImportantFilter">
+                            <option value="">All Importance</option>
+                            <option value="important">Important</option>
+                            <option value="normal">Normal</option>
+                        </select>
+                        <input type="text" id="chatSearchInput" placeholder="Search sessions...">
+                    </div>
+                    <div class="section-actions">
+                        <button class="btn-secondary" id="viewArchivesBtn">
+                            <i class="fas fa-archive"></i>
+                            View Archives
+                        </button>
+                        <button class="btn-secondary" id="viewActiveBtn" style="display: none;">
+                            <i class="fas fa-list"></i>
+                            View Active Chats
+                        </button>
+                        <!-- <button class="btn-export" id="exportChatsBtn">
+                            <i class="fas fa-download"></i>
+                            Export Chats
+                        </button> -->
+                    </div>
+                </div>
+                <div class="chat-count-display">
+                    <span id="chatCountText">Loading chats...</span>
+                    <div style="display: inline-flex; align-items: center; float: right; gap: 0.5rem;">
+                        <label for="chatsPerPageSelect">Chats per page:</label>
+                        <select id="chatsPerPageSelect" style="width: 80px;">
+                            <option value="10" selected>10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="data-table">
+                    <table id="chatsTable">
+                        <thead>
+                            <tr>
+                                <th>Session ID</th>
+                                <th>Messages</th>
+                                <th>Status</th>
+                                <th>Duration</th>
+                                <th>Rating</th>
+                                <th>Ticket</th>
+                                <th>Important</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="9" class="loading">Loading chats...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="pagination-controls"
+                        style="display: flex; align-items: center; justify-content: flex-end; gap: 1rem; margin-top: 1rem;">
+                        <span id="chatsPageInfo" style="font-size: 0.95rem; color: var(--text-secondary);"></span>
+                        <div id="chatsPagination" style="display: flex; gap: 0.5rem;"></div>
+                    </div>
+                </div>
+                <!-- Chat View Modal -->
+                <div id="chatModal" class="modal">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3>Chat Conversation</h3>
+                            <button class="modal-close">&times;</button>
+                        </div>
+                        <div class="modal-body" id="chatModalBody">
+                            <!-- Chat messages will be rendered here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tickets Section -->
+            <div id="ticketsSection" class="content-section">
+                <div class="section-header">
+                    <div class="section-filters">
+                        <select id="ticketStatusFilter">
+                            <option value="">All Statuses</option>
+                            <option value="new">New</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="closed">Closed</option>
+                        </select>
+                        <select id="ticketPriorityFilter">
+                            <option value="">All Priorities</option>
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                        </select>
+                        <input type="text" id="ticketSearchInput" placeholder="Search tickets...">
+                    </div>
+
+                    <div class="ticket-stats">
+                        <div class="stat-item">
+                            <span class="stat-label">Total:</span>
+                            <span class="stat-value" id="totalTicketsCount">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">High:</span>
+                            <span class="stat-value priority-high" id="highPriorityCount">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Medium:</span>
+                            <span class="stat-value priority-medium" id="mediumPriorityCount">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Low:</span>
+                            <span class="stat-value priority-low" id="lowPriorityCount">0</span>
+                        </div>
+                    </div>
+                    <div class="section-actions">
+                        <button class="btn-secondary" id="viewTicketArchivesBtn">
+                            <i class="fas fa-archive"></i>
+                            View Archives
+                        </button>
+                        <button class="btn-secondary" id="viewActiveTicketsBtn" style="display: none;">
+                            <i class="fas fa-list"></i>
+                            View Active Tickets
+                        </button>
+                        <!-- <button class="btn-export" id="exportTicketsBtn">
+                            <i class="fas fa-download"></i>
+                            Export Tickets
+                        </button> -->
+                    </div>
+                </div>
+                <div class="ticket-count-display">
+                    <span id="ticketCountText">Loading tickets...</span>
+                    <div style="display: inline-flex; align-items: center; float: right; gap: 0.5rem;">
+                        <label for="ticketsPerPageSelect">Tickets per page:</label>
+                        <select id="ticketsPerPageSelect" style="width: 80px;">
+                            <option value="10" selected>10</option>
+                            <option value="20">20</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="data-table">
+                    <table id="ticketsTable">
+                        <thead>
+                            <tr>
+                                <th>Ticket ID</th>
+                                <th>Status</th>
+                                <th>Priority</th>
+                                <th>Customer</th>
+                                <th>Important</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="7" class="loading">Loading tickets...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="pagination-controls"
+                        style="display: flex; align-items: center; justify-content: flex-end; gap: 1rem; margin-top: 1rem;">
+                        <span id="ticketsPageInfo" style="font-size: 0.95rem; color: var(--text-secondary);"></span>
+                        <div id="ticketsPagination" style="display: flex; gap: 0.5rem;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- FAQs Section -->
+            <div id="faqsSection" class="content-section">
+                <div class="section-header">
+                    <div class="section-filters">
+                        <select id="faqCategoryFilter">
+                            <option value="">All Categories</option>
+                            <option value="general">General</option>
+                            <option value="pricing">Pricing</option>
+                            <option value="technical">Technical</option>
+                        </select>
+                        <select id="faqStatusFilter">
+                            <option value="">All</option>
+                            <option value="true">Active</option>
+                            <option value="false">Inactive</option>
+                        </select>
+                        <select id="sortDropdown" class="sort-dropdown">
+                            <option value="updated_desc">Most Recent</option>
+                            <option value="updated_asc">Oldest First</option>
+                            <option value="rating_desc">Most Helpful</option>
+                            <option value="hitCount_desc">Most Popular</option>
+                        </select>
+                        <input type="text" id="faqSearchInput" placeholder="Search FAQs...">
+                    </div>
+                    <div class="section-actions">
+                        <button class="btn-primary" id="bulkImportBtn">
+                            <i class="fas fa-file-upload"></i>
+                            Bulk Import
+                        </button>
+                        <input type="file" id="bulkImportFile" accept=".json,.csv" style="display:none" />
+                        <button class="btn-primary" id="addFAQBtn">
+                            <i class="fas fa-plus"></i>
+                            Add FAQ
+                        </button>
+                        <button class="btn-export" id="exportFAQsBtn">
+                            <i class="fas fa-download"></i>
+                            Export FAQs
+                        </button>
+                    </div>
+                </div>
+                <div class="faq-count-display">
+                    <span id="faqCountText">Loading FAQs...</span>
+                    <div style="display: inline-flex; align-items: center; float: right; gap: 0.5rem;">
+                        <label for="faqsPerPageSelect">FAQs per page:</label>
+                        <select id="faqsPerPageSelect" style="width: 80px;">
+                            <option value="10" selected>10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="data-table">
+                    <table id="faqsTable">
+                        <thead>
+                            <tr>
+                                <th>Question <span class="sort-arrow"></span></th>
+                                <th>Category</th>
+                                <th>Hit Count <span class="sort-arrow"></span></th>
+                                <th>Rating <span class="sort-arrow"></span></th>
+                                <th>Status</th>
+                                <th>Updated <span class="sort-arrow"></span></th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="7" class="loading">Loading FAQs...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="pagination-controls"
+                        style="display: flex; align-items: center; justify-content: flex-end; gap: 1rem; margin-top: 1rem;">
+                        <span id="faqsPageInfo" style="font-size: 0.95rem; color: var(--text-secondary);"></span>
+                        <div id="faqsPagination" style="display: flex; gap: 0.5rem;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Account Section -->
+            <div id="accountSection" class="content-section">
+
+                <div class="account-content">
+                    <div class="account-layout">
+                        <!-- Profile Section (Left Half) -->
+                        <div class="account-profile-section">
+                            <div class="account-card">
+                                <div class="account-header">
+                                    <div class="account-avatar">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    <div class="account-info">
+                                        <div style="display: flex; align-items: center; gap: 6px;">
+                                            <h3 id="accountName" style="margin: 0;">&nbsp;</h3>
+                                            <button id="editNameBtn" data-tooltip="Edit Name"
+                                                style="background: none; border: none; cursor: pointer; padding: 0; margin-left: 4px;">
+                                                <i class="fas fa-pencil-alt"></i>
+                                            </button>
+                                            <input type="text" id="editNameInput"
+                                                style="display:none; width: 160px; font-size: 1.1rem; margin-left: 4px;" />
+                                        </div>
+                                        <div style="display: flex; align-items: center; gap: 6px;">
+                                            <span style="font-weight: bold;">Username:</span>
+                                            <span style="font-style: italic;" id="accountUsername">&nbsp;</span>
+                                            <button id="editUsernameBtn" data-tooltip="Edit Username"
+                                                style="background: none; border: none; cursor: pointer; padding: 0;">
+                                                <i class="fas fa-pencil-alt"></i>
+                                            </button>
+                                            <input type="text" id="editUsernameInput"
+                                                style="display:none; width: 120px; font-size: 1rem;" />
+                                        </div>
+                                        <div style="display: flex; align-items: center; gap: 6px;">
+                                            <span style="font-weight: bold;">Email:</span>
+                                            <span style="font-style: italic;" id="accountEmail">&nbsp;</span>
+                                        </div>
+                                        <span style="font-weight: bold;">Role:</span>
+                                        <span class="account-role" id="accountRole">&nbsp;</span>
+                                    </div>
+                                </div>
+
+                                <div class="account-actions">
+                                    <button class="btn-primary" id="changePasswordBtn">
+                                        <i class="fas fa-key"></i>
+                                        Change Password
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Stats Section (Right Half) -->
+                        <div class="account-stats-section">
+                            <div class="account-stats">
+                                <div class="stat-card">
+                                    <div class="stat-icon">
+                                        <i class="fas fa-calendar"></i>
+                                    </div>
+                                    <div class="stat-content">
+                                        <div class="stat-label">Member Since</div>
+                                        <div class="stat-value" id="memberSince">Jan 2024</div>
+                                    </div>
+                                </div>
+
+                                <div class="stat-card">
+                                    <div class="stat-icon">
+                                        <i class="fas fa-user-check"></i>
+                                    </div>
+                                    <div class="stat-content">
+                                        <div class="stat-label">Account Status</div>
+                                        <div class="stat-value" id="lastLogin">Active</div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Admin Management Section -->
+                    <div class="admin-management">
+                        <div class="section-header">
+                            <h3>Admin Management</h3>
+                            <button class="btn-primary" id="addAdminBtn">
+                                <i class="fas fa-plus"></i>
+                                Add New Admin
+                            </button>
+                        </div>
+
+                        <div class="admin-list" id="adminList">
+                            <div class="loading">Loading admins...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+    </div>
+
+    <!-- Modals -->
+    <div id="ticketModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Ticket Details</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body" id="ticketModalBody">
+                <!-- Ticket details will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <div id="faqModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="faqModalTitle">Add FAQ</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="faqForm">
+                    <div class="form-group">
+                        <label for="faqQuestion">Question</label>
+                        <input type="text" id="faqQuestion" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="faqAnswer">Answer</label>
+                        <textarea id="faqAnswer" rows="4" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="faqPatterns">Patterns (comma separated)</label>
+                        <textarea id="faqPatterns" rows="2"
+                            placeholder="what is QueryNest, about QueryNest, QueryNestinfo"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="faqCategory">Category</label>
+                        <select id="faqCategory">
+                            <option value="general">General</option>
+                            <option value="pricing">Pricing</option>
+                            <option value="technical">Technical</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="faqPriority">Priority</label>
+                        <select id="faqPriority">
+                            <option value="1">1 (Very Low)</option>
+                            <option value="2">2</option>
+                            <option value="3">3 (Low)</option>
+                            <option value="4">4</option>
+                            <option value="5" selected>5 (Medium)</option>
+                            <option value="6">6</option>
+                            <option value="7">7 (High)</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                            <option value="10">10 (Very High)</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" id="cancelFAQ">Cancel</button>
+                <button type="button" class="btn-primary" id="saveFAQ">Save FAQ</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Modal -->
+    <div id="confirmModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="confirmTitle">Confirm Action</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body" id="confirmBody">Are you sure?</div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="confirmCancelBtn">Cancel</button>
+                <button class="btn-primary" id="confirmOkBtn">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Management Modals -->
+    <div id="adminModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="adminModalTitle">Add New Admin</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="adminForm">
+                    <div class="form-group">
+                        <label for="adminFormName">Full Name</label>
+                        <input type="text" id="adminFormName" name="name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="adminFormUsername">Username</label>
+                        <input type="text" id="adminFormUsername" name="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="adminFormEmail">Email</label>
+                        <input type="email" id="adminFormEmail" name="email">
+                    </div>
+                    <!-- Password field removed: password will be generated automatically -->
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="isSuperAdmin" name="isSuperAdmin">
+                            Make Super Admin (Full Access)
+                        </label>
+                    </div>
+
+                    <div class="form-group" id="permissionsGroup">
+                        <div class="super-admin-note" id="superAdminNote" style="display: none;">
+                            Super Admin role has full access to all permissions automatically
+                        </div>
+                        <div class="permissions-grid">
+                            <div class="permission-item">
+                                <label class="permission-label">
+                                    <input type="checkbox" name="permissions" value="canViewDashboard" checked disabled>
+                                    <span class="checkmark"></span>
+                                    Dashboard Access
+                                    <span class="permission-note">(Default permission)</span>
+                                </label>
+                            </div>
+                            <div class="permission-item">
+                                <label class="permission-label">
+                                    <input type="checkbox" name="permissions" value="canViewChats">
+                                    <span class="checkmark"></span>
+                                    View Chats
+                                    <span class="permission-note">(View chat history and manage conversations)</span>
+                                </label>
+                            </div>
+                            <div class="permission-item">
+                                <label class="permission-label">
+                                    <input type="checkbox" name="permissions" value="canViewTickets">
+                                    <span class="checkmark"></span>
+                                    View Tickets
+                                    <span class="permission-note">(Manage support tickets and their status)</span>
+                                </label>
+                            </div>
+                            <div class="permission-item">
+                                <label class="permission-label">
+                                    <input type="checkbox" name="permissions" value="canViewFAQs">
+                                    <span class="checkmark"></span>
+                                    Manage FAQs
+                                    <span class="permission-note">(Create and manage chatbot responses)</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div class="permissions-note">When Super Admin is enabled, all permissions are granted
+                            automatically.</div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="adminCancelBtn">Cancel</button>
+                <button class="btn-primary" id="adminSaveBtn">
+                    <span class="btn-text">Save Admin</span>
+                    <span class="btn-loading" style="display:none;"><i class="fas fa-spinner fa-spin"></i></span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Change Password Modal -->
+    <div id="changePasswordModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Change Password</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="changePasswordForm">
+                    <div class="form-group">
+                        <label for="currentPassword">Current Password</label>
+                        <div class="password-input-wrapper">
+                            <input type="password" id="currentPassword" name="currentPassword" required>
+                            <button type="button" class="password-toggle" data-target="currentPassword">
+                                <i class="fas fa-eye" id="currentPassword-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="newPassword">New Password</label>
+                        <div class="password-input-wrapper">
+                            <input type="password" id="newPassword" name="newPassword" required>
+                            <button type="button" class="password-toggle" data-target="newPassword">
+                                <i class="fas fa-eye" id="newPassword-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirm New Password</label>
+                        <div class="password-input-wrapper">
+                            <input type="password" id="confirmPassword" name="confirmPassword" required>
+                            <button type="button" class="password-toggle" data-target="confirmPassword">
+                                <i class="fas fa-eye" id="confirmPassword-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="passwordCancelBtn">Cancel</button>
+                <button class="btn-primary" id="passwordSaveBtn">Change Password</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bulk Upload Modal -->
+    <div id="bulkUploadModal" class="modal">
+        <div class="modal-content bulk-upload-modal">
+            <div class="modal-header">
+                <h3>Bulk Upload FAQs</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- Upload Actions - moved to top -->
+                <div class="upload-actions">
+                    <div class="template-downloads">
+                        <div class="template-dropdown">
+                            <button type="button" class="btn-secondary dropdown-toggle" id="templateDropdownBtn">
+                                <i class="fas fa-download"></i>
+                                Download Template
+                                <i class="fas fa-chevron-down"></i>
+                            </button>
+                            <div class="dropdown-content">
+                                <a href="#" id="downloadJsonTemplateBtn">
+                                    <i class="fas fa-file-code"></i>
+                                    JSON Template
+                                </a>
+                                <a href="#" id="downloadCsvTemplateBtn">
+                                    <i class="fas fa-file-csv"></i>
+                                    CSV Template
+                                </a>
+                                <a href="#" id="downloadPdfTemplateBtn">
+                                    <i class="fas fa-file-pdf"></i>
+                                    PDF Template
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-info" id="templateInfoBtn" title="Show field requirements">
+                        <i class="fas fa-info-circle"></i>
+                    </button>
+                </div>
+
+                <div class="upload-container">
+                    <div class="upload-area" id="uploadArea">
+                        <div class="upload-icon">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                        </div>
+                        <div class="upload-text">
+                            <h4>Drag And Drop to upload the files here.</h4>
+                            <div class="upload-separator">OR</div>
+                            <button type="button" class="btn-primary upload-btn" id="browseUploadBtn">
+                                Browse and Upload
+                            </button>
+                            <div class="upload-info">
+                                Only JSON, CSV and PDF file formats will be accepted. Maximum file size is 10MB.
+                            </div>
+                        </div>
+                    </div>
+                    <input type="file" id="bulkUploadFile" accept=".json,.csv,.pdf" style="display:none" />
+                </div>
+
+                <div class="upload-progress" id="uploadProgress" style="display: none;">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <div class="progress-text" id="progressText">Uploading...</div>
+                </div>
+
+                <!-- File Options - shown after file selection -->
+                <div class="file-options" id="fileOptions" style="display: none;">
+                    <label class="checkbox-label"
+                        title="If checked, existing FAQs with matching questions will be updated with new content">
+                        <input type="checkbox" id="overwriteExisting" />
+                        <span class="checkmark"></span>
+                        Update existing FAQs if questions match
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" id="cancelBulkUpload">Cancel</button>
+                <button type="button" class="btn-primary" id="processBulkUpload" disabled>Process Upload</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upload Results Modal -->
+    <div id="uploadResultsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Upload Results</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body" id="uploadResultsBody">
+                <!-- Results will be displayed here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-primary" id="closeResultsModal">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Unauthorized Access Modal -->
+    <div id="unauthorizedModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🚫 Access Denied</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="unauthorized-content">
+                    <div class="unauthorized-icon">🔒</div>
+                    <h4>You don't have permission to access this section</h4>
+                    <p>Contact your super administrator to request access to this feature.</p>
+                    <div class="contact-info">
+                        <p><strong>Need help?</strong></p>
+                        <p>Reach out to your system administrator for permission updates.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-primary" id="closeUnauthorizedModal">Got it</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- <script src="admin-script.js"></script> -->
+    <script type="module" src="js/main.js"></script>
+</body>
+
+</html>

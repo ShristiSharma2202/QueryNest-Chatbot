@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QueryNest - Smart Assistant</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <!-- QueryNestChatbot Widget -->
+    <div class="QueryNest-widget">
+        <!-- Launcher Button -->
+        <button class="QueryNest-launcher" id="QueryNestLauncher" aria-label="Open QueryNest Assistant">
+            💬
+        </button>
+
+        <!-- Chat Widget -->
+        <div class="QueryNest-chat" id="QueryNestChat" role="dialog" aria-label="QueryNest Assistant Chat"
+            aria-expanded="false">
+            <!-- Header -->
+            <div class="QueryNest-header">
+                <div class="QueryNest-logo-section">
+                    <div class="QueryNest-logo-container">
+                        <div class="QueryNest-avatar" aria-hidden="true"><img src="/admin/logoo.png" alt="QueryNest Assistant"></div>
+                    </div>
+                    <div class="QueryNest-header-right">
+                        <div class="QueryNest-title">QueryNest Assistant</div>
+                        <div class="QueryNest-status-container">
+                            <div class="QueryNest-online-status">Online Now</div>
+                            <div class="QueryNest-status" aria-hidden="true"></div>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+
+            <!-- Messages -->
+            <div class="QueryNest-messages" id="QueryNestMessages" role="log" aria-live="polite" aria-label="Chat messages">
+            </div>
+
+            <!-- Input Area -->
+            <div class="QueryNest-input-area" role="form" aria-label="Send message">
+                <textarea class="QueryNest-input" id="QueryNestInput"
+                    placeholder="Ask about pricing, sharing, editing cards etc." rows="2"
+                    aria-label="Type your message here" aria-describedby="QueryNestInputHelp"></textarea>
+                <button class="QueryNest-send-btn" id="QueryNestSendBtn" aria-label="Send message" type="button">
+                    ➤
+                </button>
+                <div id="QueryNestInputHelp" class="sr-only">Press Enter to send message or click the send button</div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
